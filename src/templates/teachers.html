@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Teachers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+  </head>
+
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li class="active"><a href="/teachers">Manage Teachers</a></li>
+          <li><a href="/students">Manage Students</a></li>
+          <li><a href="/attendance">View Attendance</a></li>
+          <li><a href="/reports">Reports</a></li>
+        </ul>
+        <a href="/logout" class="logout">Logout</a>
+      </aside>
+
+      <main class="main">
+        <h1>Manage Teachers</h1>
+
+        <!-- CREATE TEACHER -->
+        <div class="card">
+          <h3>Create New Teacher Account</h3>
+          <form method="POST" action="/create-teacher" class="form-grid">
+            <input name="teacher_id" placeholder="Teacher ID" required />
+            <input name="name" placeholder="Teacher Name" required />
+            <select name="subject" required>
+              <option value="">Select Subject</option>
+              <option value="DBMS">DBMS</option>
+              <option value="OS">Operating Systems</option>
+              <option value="CN">Computer Networks</option>
+              <option value="AI">Artificial Intelligence</option>
+              <option value="ML">Machine Learning</option>
+              <option value="SE">Software Engineering</option>
+              <option value="Maths">Mathematics</option>
+            </select>
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Create Teacher</button>
+          </form>
+        </div>
+
+        <!-- ASSIGN SLOT -->
+        <div class="card" style="margin-top: 20px">
+          <h3>Assign Class Timetable</h3>
+          <form method="POST" action="/assign-slot" class="form-grid">
+            <input name="teacher_id" placeholder="Existing Teacher ID" required />
+            <select name="class_assigned" required>
+              <option value="">Select Class</option>
+              <option value="CSE-A">CSE-A</option>
+              <option value="CSE-B">CSE-B</option>
+            </select>
+            <select name="day" required>
+              <option value="">Select Day</option>
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+              <option>Saturday</option>
+            </select>
+            <select name="time_slot" required>
+              <option value="">Select Time Slot</option>
+              <option>9:00 - 10:00</option>
+              <option>10:00 - 11:00</option>
+              <option>11:00 - 12:00</option>
+              <option>12:00 - 1:00</option>
+              <option>2:00 - 3:00</option>
+              <option>3:00 - 4:00</option>
+              <option>4:00 - 5:00</option>
+            </select>
+            <button type="submit">Assign Timetable</button>
+          </form>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="card" style="margin-top: 20px">
+          <h3>Search Teacher Timetable</h3>
+          <form method="POST" action="/search-teacher" style="display:flex; gap:10px">
+            <input type="text" name="teacher_id" placeholder="Enter Teacher ID" required />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card" style="margin-top: 20px">
+          <h3>All Teachers</h3>
+
+          {% if teachers and teachers|length > 0 %}
+          <table style="width: 100%; border-collapse: collapse">
+            <thead>
+              <tr style="background:#f1f5f9">
+                <th>Teacher ID</th>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Class</th>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in teachers %}
+              <tr>
+                <td>{{ t[0] }}</td>
+                <td>{{ t[1] }}</td>
+                <td>{{ t[2] }}</td>
+                <td>{{ t[3] }}</td>
+                <td>{{ t[4] }}</td>
+                <td>{{ t[5] }}</td>
+                <td>
+                  <a href="/admin-delete-slot/{{ t[0] }}/{{ t[4] }}/{{ t[5] }}" style="color:red;">
+                    Delete Slot
+                  </a>
+                  |
+                  <a href="/admin-delete-teacher/{{ t[0] }}" style="color:darkred;">
+                    Delete Teacher
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p>No teachers added yet.</p>
+          {% endif %}
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

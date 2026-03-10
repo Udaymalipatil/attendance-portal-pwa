@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Attendance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4e73df">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="{{ url_for('static', filename='teacher.css') }}">
+</head>
+<body>
+
+<!-- OFFLINE BANNER -->
+<div id="network-banner" style="
+  display:none; background:#fef3c7; color:#92400e;
+  padding:10px 20px; text-align:center; font-size:14px;
+  font-weight:600; align-items:center; justify-content:center; gap:8px;
+">
+</div>
+
+<div class="dash-wrapper">
+    <div class="card">
+
+        <h2>Take Attendance</h2>
+
+        <!-- Pending sync badge -->
+        <div style="text-align:center; margin-bottom:10px;">
+          <span id="pending-badge" style="
+            display:none; background:#fef3c7; color:#92400e;
+            padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600;
+          "></span>
+        </div>
+
+        <div class="info-bar">
+            <span><strong>Class:</strong> {{ class_name }}</span>
+            <span><strong>Time:</strong> {{ time_slot }}</span>
+        </div>
+
+        {% if error %}
+        <div style="background:#fee2e2; color:#991b1b; padding:10px; border-radius:6px; margin-bottom:10px;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- onsubmit uses offline handler -->
+        <form id="attendance-form"
+              onsubmit="submitAttendanceWithOffline(event, this)"
+              method="POST" action="/teacher-mark-attendance">
+
+            <input type="hidden" name="class" value="{{ class_name }}">
+            <input type="hidden" name="time_slot" value="{{ time_slot }}">
+
+            <div class="date-box">
+                <label>Select Date:</label>
+                <input type="date" name="date" required
+                       max="{{ today }}"
+                       value="{{ today }}">
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                    </tr>
+
+                    {% for s in students %}
+                    <tr>
+                        <td>{{ s.student_id }}</td>
+                        <td>{{ s.name }}</td>
+                        <td>
+                            <select name="status_{{ s.student_id }}">
+                                <option value="Present" selected>Present</option>
+                                <option value="Absent">Absent</option>
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="primary-btn">💾 Save Attendance</button>
+                <a href="/teacher-dashboard" class="secondary-btn">Back</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="/static/offline.js"></script>
+</body>
+</html>

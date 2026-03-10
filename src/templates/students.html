@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <title>Manage Students</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/teachers">Manage Teachers</a></li>
+      <li class="active"><a href="/students">Manage Students</a></li>
+      <li><a href="/attendance">View Attendance</a></li>
+      <li><a href="/reports">Reports</a></li>
+    </ul>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <main class="main">
+    <h1>Manage Students</h1>
+
+    <!-- ADD STUDENT -->
+    <div class="card">
+      <h3>Add New Student</h3>
+      <form method="POST" action="/add-student" class="form-grid">
+        <input name="student_id" placeholder="Student ID" required>
+        <input name="name" placeholder="Student Name" required>
+        <select name="class" required>
+          <option value="">Select Class</option>
+          <option value="CSE-A">CSE-A</option>
+          <option value="CSE-B">CSE-B</option>
+        </select>
+        <button type="submit">Add Student</button>
+      </form>
+    </div>
+
+    <!-- SEARCH STUDENT -->
+    <div class="card" style="margin-top:20px">
+      <h3>Search Student by ID</h3>
+      <form method="POST" action="/search-student" style="display:flex; gap:10px">
+        <input name="student_id" placeholder="Enter Student ID" required>
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <!-- VIEW BY CLASS -->
+    <div class="card" style="margin-top:20px">
+      <h3>View Students by Class</h3>
+      <form method="POST" action="/view-students" style="display:flex; gap:10px">
+        <select name="class" required>
+          <option value="">Select Class</option>
+          <option value="CSE-A">CSE-A</option>
+          <option value="CSE-B">CSE-B</option>
+        </select>
+        <button type="submit">View</button>
+      </form>
+    </div>
+
+    <!-- STUDENT LIST -->
+    <div class="card" style="margin-top:20px">
+      <h3>Students</h3>
+
+      {% if students and students|length > 0 %}
+      <table style="width:100%; border-collapse: collapse;">
+        <tr style="background:#f1f5f9">
+          <th>ID</th>
+          <th>Name</th>
+          <th>Class</th>
+          <th>Change Class</th>
+          <th>Remove</th>
+        </tr>
+
+        {% for s in students %}
+        <tr>
+          <td>{{ s.student_id }}</td>
+          <td>{{ s.name }}</td>
+          <td>{{ s.class }}</td>
+
+          <td>
+            <form method="POST" action="/update-class/{{ s.student_id }}" style="display:flex; gap:5px">
+              <select name="new_class">
+                <option value="CSE-A">CSE-A</option>
+                <option value="CSE-B">CSE-B</option>
+              </select>
+              <button type="submit">Update</button>
+            </form>
+          </td>
+
+          <td>
+            <a href="/delete-student/{{ s.student_id }}" style="color:red">Remove</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+        <p>No students found.</p>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

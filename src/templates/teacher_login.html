@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4e73df">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Attendance">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='teacher.css') }}">
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div style="font-size:36px; margin-bottom:10px;">📋</div>
+        <h2>Teacher Login</h2>
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Attendance Portal</p>
+
+        <form method="POST" action="/teacher-login">
+            <input type="text" name="teacher_id" placeholder="Teacher ID" required autocomplete="username">
+            <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit">Login</button>
+        </form>
+
+        {% if error %}
+        <div style="color:#dc2626; margin-top:12px; font-size:14px;">{{ error }}</div>
+        {% endif %}
+
+        <p style="margin-top:20px; font-size:12px; color:#cbd5e1;">
+            Works offline · Auto-sync when online
+        </p>
+    </div>
+</div>
+
+<script>
+  // Register SW from login page too
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
+</body>
+</html>

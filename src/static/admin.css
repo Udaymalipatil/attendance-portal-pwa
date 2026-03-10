@@ -1,0 +1,162 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+    background: #f4f6fb;
+}
+
+/* Layout */
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #0f172a;
+    color: #fff;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.sidebar ul li:hover,
+.sidebar ul li.active {
+    background: #1e293b;
+}
+
+.logout {
+    display: block;
+    margin-top: 40px;
+    color: #f87171;
+    text-decoration: none;
+}
+
+/* Main */
+.main {
+    flex: 1;
+    padding: 30px;
+}
+
+.main h1 {
+    margin-bottom: 20px;
+}
+
+/* Card */
+.card {
+    background: #ffffff;
+    max-width: 900px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.card h3 {
+    margin-bottom: 15px;
+}
+
+/* Form */
+.form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.form-grid input,
+.form-grid select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.form-grid button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.form-grid button:hover {
+    background: #1d4ed8;
+}
+
+
+/* ================== ✅ ADDED TABLE FIX ================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 10px;
+}
+
+th,
+td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+th {
+    background: #f1f5f9;
+    font-weight: 600;
+}
+
+/* Column widths */
+td:nth-child(1) {
+    width: 18%;
+}
+
+td:nth-child(2) {
+    width: 15%;
+}
+
+td:nth-child(3) {
+    width: 10%;
+}
+
+td:nth-child(4) {
+    width: 12%;
+}
+
+td:nth-child(5) {
+    width: 10%;
+}
+
+td:nth-child(6) {
+    width: 15%;
+}
+
+td:nth-child(7) {
+    width: 20%;
+}
+
+td a {
+    display: inline-block;
+    margin: 2px 5px;
+    text-decoration: none;
+}
+
+td a:hover {
+    text-decoration: underline;
+}

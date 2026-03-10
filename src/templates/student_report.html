@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Student Attendance Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}"/>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/teachers">Manage Teachers</a></li>
+          <li><a href="/students">Manage Students</a></li>
+          <li><a href="/attendance">Attendance</a></li>
+          <li class="active"><a href="/reports">Reports</a></li>
+        </ul>
+        <a href="/logout" class="logout">Logout</a>
+      </aside>
+
+      <main class="main">
+        <h1>Student Attendance Report</h1>
+
+        <!-- SUMMARY CARD -->
+        <div class="card">
+          <h3>{{ name }} <span style="color:#64748b; font-size:14px;">({{ student_id }})</span></h3>
+          <div style="margin-top:15px; display:flex; gap:25px; flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <p style="font-size:12px; color:#64748b; margin-bottom:4px;">Total Classes</p>
+              <h2 style="font-size:32px; color:#0f172a;">{{ total }}</h2>
+            </div>
+            <div style="text-align:center;">
+              <p style="font-size:12px; color:#64748b; margin-bottom:4px;">Present</p>
+              <h2 style="font-size:32px; color:#16a34a;">{{ present }}</h2>
+            </div>
+            <div style="text-align:center;">
+              <p style="font-size:12px; color:#64748b; margin-bottom:4px;">Absent</p>
+              <h2 style="font-size:32px; color:#dc2626;">{{ absent }}</h2>
+            </div>
+            <div style="text-align:center;">
+              <p style="font-size:12px; color:#64748b; margin-bottom:4px;">Attendance %</p>
+              <h2 style="font-size:32px; color:{{ '#16a34a' if percentage >= 75 else '#d97706' if percentage >= 50 else '#dc2626' }};">
+                {{ percentage }}%
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY TABLE -->
+        {% if records and records|length > 0 %}
+        <div class="card" style="margin-top:20px;">
+          <h3>Attendance History</h3>
+          <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th>Date / Hour</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in records %}
+              <tr>
+                <td>{{ r[0] }}</td>
+                <td>
+                  <span style="
+                    padding:3px 10px; border-radius:12px; font-weight:600; font-size:13px;
+                    background:{{ '#dcfce7' if r[1] == 'Present' else '#fee2e2' }};
+                    color:{{ '#166534' if r[1] == 'Present' else '#991b1b' }};
+                  ">{{ r[1] }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="card" style="margin-top:20px;">
+          <p style="color:#94a3b8;">⚠️ No attendance records found for this student yet.</p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:20px;">
+          <a href="/reports" style="background:#2563eb; color:white; padding:10px 20px; border-radius:6px; text-decoration:none;">⬅ Back to Reports</a>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

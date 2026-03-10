@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <title>Attendance Control Panel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/teachers">Manage Teachers</a></li>
+      <li><a href="/students">Manage Students</a></li>
+      <li class="active"><a href="/attendance">Attendance</a></li>
+      <li><a href="/reports">Reports</a></li>
+    </ul>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <main class="main">
+    <h1>Attendance Control Panel</h1>
+
+    {% if request.args.get('success') %}
+    <div style="background:#dcfce7; color:#166534; padding:10px 15px; border-radius:6px; margin-bottom:15px;">
+      ✅ {{ request.args.get('success') }}
+    </div>
+    {% endif %}
+
+    <!-- FILTER ATTENDANCE -->
+    <div class="card">
+      <h3>🔍 Filter Attendance Records</h3>
+      <form method="POST" action="/filter-attendance" class="form-grid">
+        <select name="class" required>
+          <option value="">Select Class</option>
+          <option value="CSE-A">CSE-A</option>
+          <option value="CSE-B">CSE-B</option>
+        </select>
+        <input type="text" name="roll" placeholder="Search Roll No (optional)">
+        <button type="submit">Filter</button>
+      </form>
+    </div>
+
+    <!-- FILTER RESULTS -->
+    {% if records %}
+    <div class="card" style="margin-top:20px; max-width:900px;">
+      <h3>Attendance Records ({{ records|length }} found)</h3>
+      <table style="width:100%; border-collapse:collapse;">
+        <tr style="background:#f1f5f9">
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Date</th>
+          <th>Hour</th>
+          <th>Status</th>
+        </tr>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.student_id }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.date }}</td>
+          <td>{{ r.hour }}</td>
+          <td style="color: {{ 'green' if r.status == 'Present' else 'red' }}; font-weight:600;">
+            {{ r.status }}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% elif records is not none and records|length == 0 %}
+    <div class="card" style="margin-top:20px;">
+      <p style="color:#94a3b8;">No records found for this filter.</p>
+    </div>
+    {% endif %}
+
+    <!-- ADD / MODIFY ATTENDANCE -->
+    <div class="card" style="margin-top:20px;">
+      <h3>📘 Add / Modify Attendance</h3>
+      <form method="POST" action="/admin-add-attendance" class="form-grid">
+        <select name="class" required>
+          <option value="">Select Class</option>
+          <option value="CSE-A">CSE-A</option>
+          <option value="CSE-B">CSE-B</option>
+        </select>
+        <input type="date" name="date" required>
+        <!-- BUG FIX: time slots now match teacher_assignments format exactly -->
+        <select name="slot" required>
+          <option value="">Select Time Slot</option>
+          <option value="9:00 - 10:00">9:00 - 10:00</option>
+          <option value="10:00 - 11:00">10:00 - 11:00</option>
+          <option value="11:00 - 12:00">11:00 - 12:00</option>
+          <option value="12:00 - 1:00">12:00 - 1:00</option>
+          <option value="2:00 - 3:00">2:00 - 3:00</option>
+          <option value="3:00 - 4:00">3:00 - 4:00</option>
+          <option value="4:00 - 5:00">4:00 - 5:00</option>
+        </select>
+        <input type="text" name="student" placeholder="Student ID" required>
+        <select name="status" required>
+          <option value="">Status</option>
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+        <button type="submit">Save Attendance</button>
+      </form>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

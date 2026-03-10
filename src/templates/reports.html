@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <title>Reports</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/teachers">Manage Teachers</a></li>
+      <li><a href="/students">Manage Students</a></li>
+      <li><a href="/attendance">Attendance</a></li>
+      <li class="active"><a href="/reports">Reports</a></li>
+    </ul>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <main class="main">
+    <h1>Reports</h1>
+
+    {% if request.args.get('error') %}
+    <div style="background:#fee2e2; color:#991b1b; padding:10px 15px; border-radius:6px; margin-bottom:15px;">
+      ❌ {{ request.args.get('error') }}
+    </div>
+    {% endif %}
+
+    <!-- CLASS REPORT -->
+    <div class="card">
+      <h3>📊 Class Attendance Report</h3>
+      {% if classes and classes|length > 0 %}
+      <form method="POST" action="/class-report" class="form-grid" style="margin-top:10px;">
+        <select name="class" required>
+          <option value="">Select Class</option>
+          {% for c in classes %}
+          <option value="{{ c['class'] }}">{{ c['class'] }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Generate Class Report</button>
+      </form>
+      {% else %}
+      <p style="color:#94a3b8; margin-top:10px;">⚠️ No classes found. Add students first from <a href="/students">Manage Students</a>.</p>
+      {% endif %}
+    </div>
+
+    <!-- STUDENT REPORT -->
+    <div class="card" style="margin-top:20px;">
+      <h3>🎓 Student Attendance Report</h3>
+      {% if students and students|length > 0 %}
+      <form method="POST" action="/student-report" class="form-grid" style="margin-top:10px;">
+        <select name="student_id" required>
+          <option value="">Select Student</option>
+          {% for s in students %}
+          <option value="{{ s['student_id'] }}">{{ s['student_id'] }} — {{ s['name'] }} ({{ s['class'] }})</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Generate Student Report</button>
+      </form>
+      {% else %}
+      <p style="color:#94a3b8; margin-top:10px;">⚠️ No students found. Add students first from <a href="/students">Manage Students</a>.</p>
+      {% endif %}
+    </div>
+
+    <!-- TEACHER REPORT -->
+    <div class="card" style="margin-top:20px;">
+      <h3>👨‍🏫 Teacher Activity Report</h3>
+      {% if teachers and teachers|length > 0 %}
+      <form method="POST" action="/teacher-report-view" class="form-grid" style="margin-top:10px;">
+        <select name="teacher_id" required>
+          <option value="">Select Teacher</option>
+          {% for t in teachers %}
+          <option value="{{ t['teacher_id'] }}">{{ t['teacher_id'] }} — {{ t['name'] }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Generate Teacher Report</button>
+      </form>
+      {% else %}
+      <p style="color:#94a3b8; margin-top:10px;">⚠️ No teachers found. Add teachers first from <a href="/teachers">Manage Teachers</a>.</p>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

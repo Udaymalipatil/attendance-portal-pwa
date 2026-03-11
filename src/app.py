@@ -87,17 +87,44 @@ def create_teacher():
 def assign_slot():
     if "admin" not in session:
         return redirect("/")
+
+    teacher_id = request.form["teacher_id"]
+    class_name = request.form["class_assigned"]
+    day = request.form["day"]
+    time_slot = request.form["time_slot"]
+
     db = get_db()
-    try:
-        db.execute("INSERT INTO teacher_assignments (teacher_id, class, day, time_slot) VALUES (?, ?, ?, ?)",
-                   (request.form["teacher_id"], request.form["class_assigned"],
-                    request.form["day"], request.form["time_slot"]))
-        db.commit()
-    except sqlite3.IntegrityError:
+
+    # Check if teacher already has a class at this time
+    teacher_conflict = db.execute(
+        "SELECT * FROM teacher_assignments WHERE teacher_id=? AND day=? AND time_slot=?",
+        (teacher_id, day, time_slot)
+    ).fetchone()
+
+    if teacher_conflict:
         db.close()
-        return redirect("/teachers?error=Slot+already+assigned")
+        return redirect("/teachers?error=⚠️ Teacher already assigned to another class at this time")
+
+    # Check if class already has a teacher at this time
+    class_conflict = db.execute(
+        "SELECT * FROM teacher_assignments WHERE class=? AND day=? AND time_slot=?",
+        (class_name, day, time_slot)
+    ).fetchone()
+
+    if class_conflict:
+        db.close()
+        return redirect("/teachers?error=⚠️ This class already has a teacher at this time")
+
+    # Insert assignment
+    db.execute(
+        "INSERT INTO teacher_assignments (teacher_id, class, day, time_slot) VALUES (?, ?, ?, ?)",
+        (teacher_id, class_name, day, time_slot)
+    )
+
+    db.commit()
     db.close()
-    return redirect("/teachers")
+
+    return redirect("/teachers?success=Timetable assigned successfully")
 
 @app.route("/admin-delete-slot/<teacher_id>/<day>/<time_slot>")
 def admin_delete_slot(teacher_id, day, time_slot):

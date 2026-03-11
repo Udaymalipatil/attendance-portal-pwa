@@ -1,0 +1,3 @@
+src/attendance.db
+__pycache__/
+*.pyc

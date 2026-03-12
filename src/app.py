@@ -19,23 +19,13 @@ DB_PATH = os.path.join(BASE_DIR, "attendance.db")
 # ================= DATABASE INITIALIZATION =================
 def initialize_database():
 
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+    if not os.path.exists(DB_PATH):
+        print("⚡ Database not found. Creating new database...")
 
-    cur.execute("""
-    SELECT name FROM sqlite_master
-    WHERE type='table' AND name='admin'
-    """)
-
-    table_exists = cur.fetchone()
-
-    conn.close()
-
-    if not table_exists:
-        print("⚡ Creating database tables...")
         from init_db import init_db
         init_db()
-        print("✅ Database initialized successfully")
+
+        print("✅ Database created successfully")
 
 initialize_database()
 
@@ -46,6 +36,7 @@ def get_db():
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout = 5000;")
     return conn
+
 
 # ================= ADMIN LOGIN =================
 @app.route("/", methods=["GET", "POST"])
@@ -70,6 +61,7 @@ def admin_login():
         return render_template("admin_login.html", error="Invalid credentials")
 
     return render_template("admin_login.html")
+
 
 # ================= DASHBOARD =================
 @app.route("/dashboard")
@@ -102,6 +94,7 @@ def dashboard():
         total_attendance=total_attendance
     )
 
+
 # ================= TEACHERS =================
 @app.route("/teachers")
 def manage_teachers():
@@ -126,6 +119,7 @@ def manage_teachers():
         teachers=teachers
     )
 
+
 @app.route("/create-teacher", methods=["POST"])
 def create_teacher():
 
@@ -135,7 +129,6 @@ def create_teacher():
     db = get_db()
 
     try:
-
         db.execute(
             "INSERT INTO teachers (teacher_id, name, password, subject, active) VALUES (?, ?, ?, ?, 1)",
             (
@@ -155,6 +148,7 @@ def create_teacher():
     db.close()
 
     return redirect("/teachers")
+
 
 # ================= STUDENTS =================
 @app.route("/students")
@@ -177,6 +171,7 @@ def manage_students():
         students=students
     )
 
+
 @app.route("/add-student", methods=["POST"])
 def add_student():
 
@@ -186,7 +181,6 @@ def add_student():
     db = get_db()
 
     try:
-
         db.execute(
             "INSERT INTO students (student_id, name, class, active) VALUES (?, ?, ?, 1)",
             (
@@ -206,10 +200,12 @@ def add_student():
 
     return redirect("/students")
 
+
 # ================= TEACHER LOGIN =================
 @app.route("/teacher")
 def teacher_login_page():
     return render_template("teacher_login.html")
+
 
 @app.route("/teacher-login", methods=["POST"])
 def teacher_login():
@@ -232,6 +228,7 @@ def teacher_login():
         return redirect("/teacher-dashboard")
 
     return render_template("teacher_login.html", error="Invalid Login")
+
 
 # ================= TEACHER DASHBOARD =================
 @app.route("/teacher-dashboard")
@@ -262,6 +259,7 @@ def teacher_dashboard():
         teacher_name=teacher["name"] if teacher else teacher_id
     )
 
+
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
@@ -270,6 +268,7 @@ def logout():
     session.pop("teacher", None)
 
     return redirect("/")
+
 
 # ================= PWA FILES =================
 @app.route("/sw.js")
@@ -281,11 +280,14 @@ def service_worker():
         mimetype="application/javascript"
     )
 
+
 @app.route("/offline.html")
 def offline_page():
     return render_template("offline.html")
 
+
 print("✅ Server loaded successfully")
+
 
 # ================= RENDER SERVER =================
 if __name__ == "__main__":

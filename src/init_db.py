@@ -1,9 +1,13 @@
 ```python
 import sqlite3
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "attendance.db")
 
 def init_db():
 
-    conn = sqlite3.connect("attendance.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     # ================= ADMIN =================
@@ -58,29 +62,6 @@ def init_db():
     )
     """)
 
-    assignments = [
-    ("T001","CSE-A","Monday","9:00 - 10:00"),
-    ("T002","CSE-A","Monday","10:00 - 11:00"),
-    ("T003","CSE-A","Tuesday","11:00 - 12:00"),
-    ("T004","CSE-A","Wednesday","12:00 - 1:00"),
-    ("T005","CSE-A","Thursday","2:00 - 3:00"),
-    ("T006","CSE-A","Friday","3:00 - 4:00"),
-
-    ("T001","CSE-B","Tuesday","9:00 - 10:00"),
-    ("T002","CSE-B","Wednesday","10:00 - 11:00"),
-    ("T003","CSE-B","Thursday","11:00 - 12:00"),
-    ("T004","CSE-B","Friday","12:00 - 1:00"),
-    ("T005","CSE-B","Monday","2:00 - 3:00"),
-    ("T006","CSE-B","Tuesday","3:00 - 4:00")
-    ]
-
-    for a in assignments:
-        cur.execute("""
-        INSERT OR IGNORE INTO teacher_assignments
-        (teacher_id,class,day,time_slot)
-        VALUES (?,?,?,?)
-        """, a)
-
     # ================= STUDENTS =================
     cur.execute("""
     CREATE TABLE IF NOT EXISTS students (
@@ -93,11 +74,9 @@ def init_db():
 
     students = []
 
-    # CSE-A (35 students)
     for i in range(1,36):
         students.append((f"21CSA{i:03d}", f"Student_A_{i}", "CSE-A"))
 
-    # CSE-B (35 students)
     for i in range(1,36):
         students.append((f"21CSB{i:03d}", f"Student_B_{i}", "CSE-B"))
 
@@ -123,10 +102,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-    print("✅ Database + dataset created successfully")
+    print("✅ Database initialized successfully")
 
-
-# Run manually if needed
 if __name__ == "__main__":
     init_db()
-```
+

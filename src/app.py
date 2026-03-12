@@ -1,9 +1,9 @@
+```python
 from flask import Flask, render_template, request, redirect, session, send_from_directory
 import sqlite3
-from datetime import timedelta, date
+from datetime import timedelta
 from flask_cors import CORS
 import os
-import subprocess
 
 app = Flask(__name__)
 CORS(app)
@@ -16,10 +16,15 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "attendance.db")
 
-# ================= AUTO CREATE DATABASE =================
-if not os.path.exists(DB_PATH):
-    print("Creating database automatically...")
-    subprocess.run(["python", "init_db.py"])
+# ================= DATABASE INITIALIZATION =================
+def initialize_database():
+    if not os.path.exists(DB_PATH):
+        print("⚡ Creating database automatically...")
+        from init_db import init_db
+        init_db()
+        print("✅ Database created successfully")
+
+initialize_database()
 
 # ================= DATABASE CONNECTION =================
 def get_db():
@@ -32,26 +37,31 @@ def get_db():
 # ================= ADMIN LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 def admin_login():
+
     if request.method == "POST":
+
         db = get_db()
-        cur = db.cursor()
-        cur.execute("SELECT * FROM admin WHERE username=? AND password=?",
-                    (request.form["username"], request.form["password"]))
-        admin = cur.fetchone()
+
+        admin = db.execute(
+            "SELECT * FROM admin WHERE username=? AND password=?",
+            (request.form["username"], request.form["password"])
+        ).fetchone()
+
         db.close()
 
         if admin:
             session.permanent = True
             session["admin"] = admin["username"]
             return redirect("/dashboard")
-        else:
-            return render_template("admin_login.html", error="Invalid credentials")
+
+        return render_template("admin_login.html", error="Invalid credentials")
 
     return render_template("admin_login.html")
 
 # ================= DASHBOARD =================
 @app.route("/dashboard")
 def dashboard():
+
     if "admin" not in session:
         return redirect("/")
 
@@ -82,6 +92,7 @@ def dashboard():
 # ================= TEACHERS =================
 @app.route("/teachers")
 def manage_teachers():
+
     if "admin" not in session:
         return redirect("/")
 
@@ -90,23 +101,30 @@ def manage_teachers():
     teachers = db.execute("""
         SELECT t.teacher_id, t.name, t.subject, ta.class, ta.day, ta.time_slot
         FROM teachers t
-        LEFT JOIN teacher_assignments ta ON t.teacher_id = ta.teacher_id
+        LEFT JOIN teacher_assignments ta
+        ON t.teacher_id = ta.teacher_id
     """).fetchall()
 
     db.close()
 
-    return render_template("teachers.html", admin=session["admin"], teachers=teachers)
+    return render_template(
+        "teachers.html",
+        admin=session["admin"],
+        teachers=teachers
+    )
 
 @app.route("/create-teacher", methods=["POST"])
 def create_teacher():
+
     if "admin" not in session:
         return redirect("/")
 
     db = get_db()
 
     try:
+
         db.execute(
-            "INSERT INTO teachers (teacher_id, name, password, subject) VALUES (?, ?, ?, ?)",
+            "INSERT INTO teachers (teacher_id, name, password, subject, active) VALUES (?, ?, ?, ?, 1)",
             (
                 request.form["teacher_id"],
                 request.form["name"],
@@ -114,18 +132,21 @@ def create_teacher():
                 request.form["subject"]
             )
         )
+
         db.commit()
 
     except sqlite3.IntegrityError:
         db.close()
-        return redirect("/teachers?error=Teacher+ID+already+exists")
+        return redirect("/teachers?error=Teacher+ID+exists")
 
     db.close()
+
     return redirect("/teachers")
 
 # ================= STUDENTS =================
 @app.route("/students")
 def manage_students():
+
     if "admin" not in session:
         return redirect("/")
 
@@ -137,24 +158,31 @@ def manage_students():
 
     db.close()
 
-    return render_template("students.html", admin=session["admin"], students=students)
+    return render_template(
+        "students.html",
+        admin=session["admin"],
+        students=students
+    )
 
 @app.route("/add-student", methods=["POST"])
 def add_student():
+
     if "admin" not in session:
         return redirect("/")
 
     db = get_db()
 
     try:
+
         db.execute(
-            "INSERT INTO students (student_id, name, class) VALUES (?, ?, ?)",
+            "INSERT INTO students (student_id, name, class, active) VALUES (?, ?, ?, 1)",
             (
                 request.form["student_id"],
                 request.form["name"],
                 request.form["class"]
             )
         )
+
         db.commit()
 
     except sqlite3.IntegrityError:
@@ -162,6 +190,7 @@ def add_student():
         return redirect("/students?error=Student+ID+exists")
 
     db.close()
+
     return redirect("/students")
 
 # ================= TEACHER LOGIN =================
@@ -185,7 +214,9 @@ def teacher_login():
     db.close()
 
     if teacher and teacher["password"] == password:
+
         session["teacher"] = teacher_id
+
         return redirect("/teacher-dashboard")
 
     return render_template("teacher_login.html", error="Invalid Login")
@@ -222,23 +253,32 @@ def teacher_dashboard():
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
+
     session.pop("admin", None)
     session.pop("teacher", None)
+
     return redirect("/")
 
 # ================= PWA FILES =================
 @app.route("/sw.js")
 def service_worker():
-    return send_from_directory("static", "sw.js",
-                               mimetype="application/javascript")
+
+    return send_from_directory(
+        "static",
+        "sw.js",
+        mimetype="application/javascript"
+    )
 
 @app.route("/offline.html")
 def offline_page():
     return render_template("offline.html")
 
-print("Server loaded successfully")
+print("✅ Server loaded successfully")
 
 # ================= RENDER SERVER =================
 if __name__ == "__main__":
+
     port = int(os.environ.get("PORT", 5000))
+
     app.run(host="0.0.0.0", port=port)
+

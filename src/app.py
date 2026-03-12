@@ -18,11 +18,24 @@ DB_PATH = os.path.join(BASE_DIR, "attendance.db")
 
 # ================= DATABASE INITIALIZATION =================
 def initialize_database():
-    if not os.path.exists(DB_PATH):
-        print("⚡ Creating database automatically...")
+
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT name FROM sqlite_master
+    WHERE type='table' AND name='admin'
+    """)
+
+    table_exists = cur.fetchone()
+
+    conn.close()
+
+    if not table_exists:
+        print("⚡ Creating database tables...")
         from init_db import init_db
         init_db()
-        print("✅ Database created successfully")
+        print("✅ Database initialized successfully")
 
 initialize_database()
 
@@ -216,7 +229,6 @@ def teacher_login():
     if teacher and teacher["password"] == password:
 
         session["teacher"] = teacher_id
-
         return redirect("/teacher-dashboard")
 
     return render_template("teacher_login.html", error="Invalid Login")
@@ -281,4 +293,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
 
     app.run(host="0.0.0.0", port=port)
-
+```

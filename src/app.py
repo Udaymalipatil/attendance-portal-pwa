@@ -3,10 +3,10 @@ import sqlite3
 from datetime import timedelta, date
 from flask_cors import CORS
 import os
+import subprocess
 
 app = Flask(__name__)
 CORS(app)
-
 app.secret_key = "super-secret-key"
 
 app.config["SESSION_PERMANENT"] = True
@@ -16,9 +16,10 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "attendance.db")
 
-# Auto-create database if missing
+# ================= AUTO CREATE DATABASE =================
 if not os.path.exists(DB_PATH):
-    import init_db
+    print("Creating database automatically...")
+    subprocess.run(["python", "init_db.py"])
 
 # ================= DATABASE CONNECTION =================
 def get_db():
@@ -28,27 +29,25 @@ def get_db():
     conn.execute("PRAGMA busy_timeout = 5000;")
     return conn
 
-
 # ================= ADMIN LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
         db = get_db()
-        admin = db.execute(
-            "SELECT * FROM admin WHERE username=? AND password=?",
-            (request.form["username"], request.form["password"])
-        ).fetchone()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM admin WHERE username=? AND password=?",
+                    (request.form["username"], request.form["password"]))
+        admin = cur.fetchone()
         db.close()
 
         if admin:
             session.permanent = True
             session["admin"] = admin["username"]
             return redirect("/dashboard")
-
-        return render_template("admin_login.html", error="Invalid credentials")
+        else:
+            return render_template("admin_login.html", error="Invalid credentials")
 
     return render_template("admin_login.html")
-
 
 # ================= DASHBOARD =================
 @app.route("/dashboard")
@@ -80,7 +79,6 @@ def dashboard():
         total_attendance=total_attendance
     )
 
-
 # ================= TEACHERS =================
 @app.route("/teachers")
 def manage_teachers():
@@ -99,7 +97,6 @@ def manage_teachers():
 
     return render_template("teachers.html", admin=session["admin"], teachers=teachers)
 
-
 @app.route("/create-teacher", methods=["POST"])
 def create_teacher():
     if "admin" not in session:
@@ -109,7 +106,7 @@ def create_teacher():
 
     try:
         db.execute(
-            "INSERT INTO teachers (teacher_id,name,password,subject) VALUES (?,?,?,?)",
+            "INSERT INTO teachers (teacher_id, name, password, subject) VALUES (?, ?, ?, ?)",
             (
                 request.form["teacher_id"],
                 request.form["name"],
@@ -124,51 +121,7 @@ def create_teacher():
         return redirect("/teachers?error=Teacher+ID+already+exists")
 
     db.close()
-
     return redirect("/teachers")
-
-
-# ================= ASSIGN TIMETABLE =================
-@app.route("/assign-slot", methods=["POST"])
-def assign_slot():
-    if "admin" not in session:
-        return redirect("/")
-
-    teacher_id = request.form["teacher_id"]
-    class_name = request.form["class_assigned"]
-    day = request.form["day"]
-    time_slot = request.form["time_slot"]
-
-    db = get_db()
-
-    teacher_conflict = db.execute(
-        "SELECT * FROM teacher_assignments WHERE teacher_id=? AND day=? AND time_slot=?",
-        (teacher_id, day, time_slot)
-    ).fetchone()
-
-    if teacher_conflict:
-        db.close()
-        return redirect("/teachers?error=Teacher+already+assigned+at+this+time")
-
-    class_conflict = db.execute(
-        "SELECT * FROM teacher_assignments WHERE class=? AND day=? AND time_slot=?",
-        (class_name, day, time_slot)
-    ).fetchone()
-
-    if class_conflict:
-        db.close()
-        return redirect("/teachers?error=Class+already+has+teacher")
-
-    db.execute(
-        "INSERT INTO teacher_assignments (teacher_id,class,day,time_slot) VALUES (?,?,?,?)",
-        (teacher_id, class_name, day, time_slot)
-    )
-
-    db.commit()
-    db.close()
-
-    return redirect("/teachers")
-
 
 # ================= STUDENTS =================
 @app.route("/students")
@@ -179,13 +132,12 @@ def manage_students():
     db = get_db()
 
     students = db.execute(
-        "SELECT student_id,name,class FROM students WHERE active=1"
+        "SELECT student_id, name, class FROM students WHERE active=1"
     ).fetchall()
 
     db.close()
 
     return render_template("students.html", admin=session["admin"], students=students)
-
 
 @app.route("/add-student", methods=["POST"])
 def add_student():
@@ -196,7 +148,7 @@ def add_student():
 
     try:
         db.execute(
-            "INSERT INTO students (student_id,name,class) VALUES (?,?,?)",
+            "INSERT INTO students (student_id, name, class) VALUES (?, ?, ?)",
             (
                 request.form["student_id"],
                 request.form["name"],
@@ -207,18 +159,15 @@ def add_student():
 
     except sqlite3.IntegrityError:
         db.close()
-        return redirect("/students?error=Student+exists")
+        return redirect("/students?error=Student+ID+exists")
 
     db.close()
-
     return redirect("/students")
-
 
 # ================= TEACHER LOGIN =================
 @app.route("/teacher")
 def teacher_login_page():
     return render_template("teacher_login.html")
-
 
 @app.route("/teacher-login", methods=["POST"])
 def teacher_login():
@@ -241,7 +190,6 @@ def teacher_login():
 
     return render_template("teacher_login.html", error="Invalid Login")
 
-
 # ================= TEACHER DASHBOARD =================
 @app.route("/teacher-dashboard")
 def teacher_dashboard():
@@ -259,7 +207,7 @@ def teacher_dashboard():
     ).fetchone()
 
     timetable = db.execute(
-        "SELECT class,day,time_slot FROM teacher_assignments WHERE teacher_id=?",
+        "SELECT class, day, time_slot FROM teacher_assignments WHERE teacher_id=?",
         (teacher_id,)
     ).fetchall()
 
@@ -271,67 +219,12 @@ def teacher_dashboard():
         teacher_name=teacher["name"] if teacher else teacher_id
     )
 
-
-# ================= MARK ATTENDANCE =================
-@app.route("/teacher-attendance/<class_name>/<path:time_slot>")
-def teacher_attendance_page(class_name, time_slot):
-
-    if "teacher" not in session:
-        return redirect("/teacher")
-
-    db = get_db()
-
-    students = db.execute(
-        "SELECT student_id,name FROM students WHERE class=? AND active=1",
-        (class_name,)
-    ).fetchall()
-
-    db.close()
-
-    return render_template(
-        "teacher_attendance.html",
-        students=students,
-        class_name=class_name,
-        time_slot=time_slot,
-        today=date.today().isoformat()
-    )
-
-
-@app.route("/teacher-mark-attendance", methods=["POST"])
-def teacher_mark_attendance():
-
-    if "teacher" not in session:
-        return redirect("/teacher")
-
-    class_name = request.form["class"]
-    time_slot = request.form["time_slot"]
-    date_value = request.form["date"]
-
-    db = get_db()
-
-    for key in request.form:
-        if key.startswith("status_"):
-            student_id = key[7:]
-            status = request.form[key]
-
-            db.execute("""
-                INSERT OR REPLACE INTO attendance
-                (student_id,class,date,hour,status)
-                VALUES (?,?,?,?,?)
-            """, (student_id, class_name, date_value, time_slot, status))
-
-    db.commit()
-    db.close()
-
-    return redirect("/teacher-dashboard")
-
-
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
-    session.clear()
+    session.pop("admin", None)
+    session.pop("teacher", None)
     return redirect("/")
-
 
 # ================= PWA FILES =================
 @app.route("/sw.js")
@@ -339,16 +232,13 @@ def service_worker():
     return send_from_directory("static", "sw.js",
                                mimetype="application/javascript")
 
-
 @app.route("/offline.html")
 def offline_page():
     return render_template("offline.html")
 
+print("Server loaded successfully")
 
-print("✅ Server Ready — Deployment Mode")
-
-
-# ================= SERVER START =================
+# ================= RENDER SERVER =================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
